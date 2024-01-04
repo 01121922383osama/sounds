@@ -4,12 +4,13 @@ import 'package:just_audio/just_audio.dart';
 import 'model/Musics.dart';
 
 class Detailpage extends StatefulWidget {
+  final Musics mMusic;
+  final AudioPlayer audioPlayer;
   const Detailpage({
     Key? key,
     required this.mMusic,
+    required this.audioPlayer,
   }) : super(key: key);
-
-  final Musics mMusic;
 
   @override
   State<Detailpage> createState() => _DetailpageState();
@@ -21,37 +22,45 @@ class _DetailpageState extends State<Detailpage> {
   Duration duration = Duration.zero;
   Duration position = Duration.zero;
 
-  AudioPlayer audioPlayer = AudioPlayer();
-  bool isPlaying = false;
-  String currentSong = "";
+  @override
+  void initState() {
+    super.initState();
 
-  void playMusic(String url) async {
-    if (isPlaying && currentSong == url) {
-      audioPlayer.pause();
-      setState(() {
-        isPlaying = false;
-        btnIcon = Icons.play_arrow;
-      });
-    } else {
-      await audioPlayer.setUrl(url);
-      audioPlayer.play();
-      setState(() {
-        isPlaying = true;
-        btnIcon = Icons.pause;
-      });
-    }
+    setupAudioPlayer();
+  }
 
-    audioPlayer.durationStream.listen((event) {
+  void setupAudioPlayer() {
+    widget.audioPlayer.durationStream.listen((event) {
       setState(() {
         duration = event ?? Duration.zero;
       });
     });
 
-    audioPlayer.positionStream.listen((event) {
+    widget.audioPlayer.positionStream.listen((event) {
       setState(() {
-        position = event ?? Duration.zero;
+        position = event;
       });
     });
+
+    widget.audioPlayer.playerStateStream.listen((playerState) {
+      if (playerState.playing) {
+        setState(() {
+          btnIcon = Icons.pause;
+        });
+      } else {
+        setState(() {
+          btnIcon = Icons.play_arrow;
+        });
+      }
+    });
+  }
+
+  void playPause() {
+    if (widget.audioPlayer.playing) {
+      widget.audioPlayer.pause();
+    } else {
+      widget.audioPlayer.play();
+    }
   }
 
   @override
@@ -68,7 +77,7 @@ class _DetailpageState extends State<Detailpage> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.red,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(50.0),
                   ),
                   child: const Icon(
@@ -97,7 +106,7 @@ class _DetailpageState extends State<Detailpage> {
               min: 0.0,
               max: duration.inSeconds.toDouble(),
               onChanged: (value) {
-                audioPlayer.seek(Duration(seconds: value.toInt()));
+                widget.audioPlayer.seek(Duration(seconds: value.toInt()));
               },
             ),
             const Spacer(),
@@ -112,23 +121,13 @@ class _DetailpageState extends State<Detailpage> {
                 const SizedBox(width: 32.0),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.red,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(50.0),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: IconButton(
-                      onPressed: () {
-                        if (isPlaying) {
-                          audioPlayer.pause();
-                        } else {
-                          audioPlayer.play();
-                        }
-                        setState(() {
-                          isPlaying = !isPlaying;
-                          btnIcon = isPlaying ? Icons.pause : Icons.play_arrow;
-                        });
-                      },
+                      onPressed: playPause,
                       icon: Icon(btnIcon),
                       iconSize: 42.0,
                       color: Colors.red,
@@ -170,7 +169,7 @@ class _DetailpageState extends State<Detailpage> {
 
   @override
   void dispose() {
-    audioPlayer.dispose();
+    widget.audioPlayer.dispose();
     super.dispose();
   }
 }

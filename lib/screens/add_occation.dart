@@ -19,7 +19,7 @@ class AddOccation extends StatefulWidget {
 
 class _AddOccationState extends State<AddOccation> {
   late List<Musics> musics;
-
+  final AudioPlayer audioPlayer = AudioPlayer();
   @override
   void initState() {
     musics = getMusicsList();
@@ -119,15 +119,17 @@ class _AddOccationState extends State<AddOccation> {
                   itemCount: musics.length,
                   itemBuilder: (context, index) => customListView(
                     onTap: () async {
+                      // /////////////////////////////////////
+                      // /////////////////////////////////////
+                      // /////////////////////////////////////
+
                       Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => Detailpage(mMusic: musics[index]),
+                        builder: (context) => Detailpage(
+                            mMusic: musics[index], audioPlayer: audioPlayer),
                       ));
-                      // /////////////////////////////////////
-                      // /////////////////////////////////////
-                      // /////////////////////////////////////
-                      final AudioPlayer audioPlayer = AudioPlayer();
                       await audioPlayer.setAsset(musics[index].url);
                       await audioPlayer.play();
+
                       // /////////////////////////////////////
                       // /////////////////////////////////////
                       // /////////////////////////////////////
