@@ -4,6 +4,7 @@ import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:sounds/Detailpage.dart';
 
 import '../components/custom_list_view.dart';
 import '../model/Musics.dart';
@@ -118,6 +119,9 @@ class _AddOccationState extends State<AddOccation> {
                   itemCount: musics.length,
                   itemBuilder: (context, index) => customListView(
                     onTap: () async {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => Detailpage(mMusic: musics[index]),
+                      ));
                       // /////////////////////////////////////
                       // /////////////////////////////////////
                       // /////////////////////////////////////

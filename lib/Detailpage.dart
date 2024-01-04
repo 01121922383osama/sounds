@@ -5,10 +5,12 @@ import 'model/Musics.dart';
 
 class Detailpage extends StatefulWidget {
   const Detailpage({
-    super.key,
+    Key? key,
     required this.mMusic,
-  });
+  }) : super(key: key);
+
   final Musics mMusic;
+
   @override
   State<Detailpage> createState() => _DetailpageState();
 }
@@ -16,39 +18,38 @@ class Detailpage extends StatefulWidget {
 class _DetailpageState extends State<Detailpage> {
   IconData btnIcon = Icons.play_arrow;
 
-  Duration duration = const Duration();
-  Duration position = const Duration();
+  Duration duration = Duration.zero;
+  Duration position = Duration.zero;
 
   AudioPlayer audioPlayer = AudioPlayer();
   bool isPlaying = false;
   String currentSong = "";
 
   void playMusic(String url) async {
-    if (isPlaying && currentSong != url) {
+    if (isPlaying && currentSong == url) {
       audioPlayer.pause();
-      int result = await audioPlayer.play() as int;
-      if (result == 1) {
-        setState(() {
-          currentSong = url;
-        });
-      }
-    } else if (!isPlaying) {
-      int result = await audioPlayer.play() as int;
-      if (result == 1) {
-        setState(() {
-          isPlaying = true;
-          btnIcon = Icons.pause;
-        });
-      }
+      setState(() {
+        isPlaying = false;
+        btnIcon = Icons.play_arrow;
+      });
+    } else {
+      await audioPlayer.setUrl(url);
+      audioPlayer.play();
+      setState(() {
+        isPlaying = true;
+        btnIcon = Icons.pause;
+      });
     }
+
     audioPlayer.durationStream.listen((event) {
       setState(() {
-        duration = event!;
+        duration = event ?? Duration.zero;
       });
     });
-    audioPlayer.durationStream.listen((event) {
+
+    audioPlayer.positionStream.listen((event) {
       setState(() {
-        position = event!;
+        position = event ?? Duration.zero;
       });
     });
   }
@@ -59,109 +60,85 @@ class _DetailpageState extends State<Detailpage> {
       backgroundColor: Colors.blue,
       body: Center(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              decoration: const BoxDecoration(),
+            const SizedBox(height: 52.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(50.0),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_drop_down,
+                    color: Colors.red,
+                  ),
+                ),
+                const Text("playlist"),
+                const Icon(
+                  Icons.playlist_add,
+                ),
+              ],
             ),
-            Container(
-              decoration: const BoxDecoration(),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: Column(
-                children: [
-                  const SizedBox(
-                    height: 52.0,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.blue,
-                          borderRadius: BorderRadius.circular(50.0),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_drop_down,
-                          color: Colors.blue,
-                        ),
-                      ),
-                      const Column(
-                        children: [
-                          Text(
-                            "playlist",
-                          )
-                        ],
-                      ),
-                      const Icon(
-                        Icons.playlist_add,
-                      )
-                    ],
-                  ),
-                  const Spacer(),
-                  Text(widget.mMusic.title),
-                  const SizedBox(
-                    height: 6.0,
-                  ),
-                ],
+            const Spacer(),
+            Text(
+              widget.mMusic.title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 24.0,
+                fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(
-              height: 42.0,
-            ),
+            const SizedBox(height: 6.0),
             Slider.adaptive(
-                value: position.inSeconds.toDouble(),
-                min: 0.0,
-                max: duration.inSeconds.toDouble(),
-                onChanged: (value) {}),
+              value: position.inSeconds.toDouble(),
+              min: 0.0,
+              max: duration.inSeconds.toDouble(),
+              onChanged: (value) {
+                audioPlayer.seek(Duration(seconds: value.toInt()));
+              },
+            ),
             const Spacer(),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(
-                  Icons.fast_forward,
-                  color: Colors.blue,
+                  Icons.fast_rewind,
+                  color: Colors.red,
                   size: 42.0,
                 ),
-                const SizedBox(
-                  width: 32.0,
-                ),
+                const SizedBox(width: 32.0),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.blue,
+                    color: Colors.red,
                     borderRadius: BorderRadius.circular(50.0),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: IconButton(
                       onPressed: () {
-                        playMusic(widget.mMusic.url);
                         if (isPlaying) {
                           audioPlayer.pause();
-                          setState(() {
-                            btnIcon = Icons.play_arrow;
-                            isPlaying = false;
-                          });
                         } else {
-                          audioPlayer.pause();
-                          setState(() {
-                            btnIcon = Icons.pause;
-                            isPlaying = true;
-                          });
+                          audioPlayer.play();
                         }
+                        setState(() {
+                          isPlaying = !isPlaying;
+                          btnIcon = isPlaying ? Icons.pause : Icons.play_arrow;
+                        });
                       },
                       icon: Icon(btnIcon),
                       iconSize: 42.0,
-                      color: Colors.blue,
+                      color: Colors.red,
                     ),
                   ),
                 ),
-                const SizedBox(
-                  width: 32.0,
-                ),
+                const SizedBox(width: 32.0),
                 const Icon(
                   Icons.fast_forward,
-                  color: Colors.blue,
+                  color: Colors.red,
                   size: 42.0,
                 ),
               ],
@@ -172,24 +149,28 @@ class _DetailpageState extends State<Detailpage> {
               children: [
                 Icon(
                   Icons.bookmark_border,
-                  color: Colors.blue,
+                  color: Colors.red,
                 ),
                 Icon(
                   Icons.shuffle,
-                  color: Colors.blue,
+                  color: Colors.red,
                 ),
                 Icon(
                   Icons.repeat,
-                  color: Colors.blue,
+                  color: Colors.red,
                 ),
               ],
             ),
-            const SizedBox(
-              height: 58.0,
-            ),
+            const SizedBox(height: 58.0),
           ],
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    audioPlayer.dispose();
+    super.dispose();
   }
 }
