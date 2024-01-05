@@ -18,28 +18,25 @@ class AddOccation extends StatefulWidget {
 }
 
 class _AddOccationState extends State<AddOccation> {
-  late List<Musics> musics;
   final AudioPlayer audioPlayer = AudioPlayer();
-  @override
-  void initState() {
-    musics = getMusicsList();
-    super.initState();
-  }
 
-  List<Musics> getMusicsList() {
-    return [
-      Musics(
-        title: "فؤاد الثلايا",
-        image: "assets/Images/9635541.png",
-        url: "assets/songs/1.mp3",
-      ),
-      Musics(
-        title: "فؤاد الثلايا",
-        image: "assets/Images/9635541.png",
-        url: "assets/songs/1.mp3",
-      ),
-    ];
-  }
+  List<Musics> musics = [
+    Musics(
+      title: "فؤاد الثلايا",
+      image: "assets/Images/9635541.png",
+      url: "assets/songs/1.mp3",
+    ),
+    Musics(
+      title: "فؤاد الثلايا",
+      image: "assets/songs/2.mp3",
+      url: "assets/songs/2.mp3",
+    ),
+    Musics(
+      title: "فؤاد الثلايا",
+      image: "assets/Images/9635541.png",
+      url: "assets/songs/3.mp3",
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -125,7 +122,10 @@ class _AddOccationState extends State<AddOccation> {
 
                       Navigator.of(context).push(MaterialPageRoute(
                         builder: (context) => Detailpage(
-                            mMusic: musics[index], audioPlayer: audioPlayer),
+                          mMusic: musics[index],
+                          audioPlayer: audioPlayer,
+                          playlist: musics,
+                        ),
                       ));
                       await audioPlayer.setAsset(musics[index].url);
                       await audioPlayer.play();

@@ -6,10 +6,13 @@ import 'model/Musics.dart';
 class Detailpage extends StatefulWidget {
   final Musics mMusic;
   final AudioPlayer audioPlayer;
+  final List<Musics> playlist;
+
   const Detailpage({
     Key? key,
     required this.mMusic,
     required this.audioPlayer,
+    required this.playlist,
   }) : super(key: key);
 
   @override
@@ -18,15 +21,19 @@ class Detailpage extends StatefulWidget {
 
 class _DetailpageState extends State<Detailpage> {
   IconData btnIcon = Icons.play_arrow;
-
   Duration duration = Duration.zero;
   Duration position = Duration.zero;
+  int currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
-
+    setInitialAudio();
     setupAudioPlayer();
+  }
+
+  void setInitialAudio() {
+    widget.audioPlayer.setAsset(widget.playlist[currentIndex].url);
   }
 
   void setupAudioPlayer() {
@@ -40,26 +47,38 @@ class _DetailpageState extends State<Detailpage> {
       setState(() {
         position = event;
       });
+
+      if (position >= duration) {
+        playNext();
+      }
     });
 
     widget.audioPlayer.playerStateStream.listen((playerState) {
-      if (playerState.playing) {
-        setState(() {
-          btnIcon = Icons.pause;
-        });
-      } else {
-        setState(() {
-          btnIcon = Icons.play_arrow;
-        });
-      }
+      setState(() {
+        btnIcon = playerState.playing ? Icons.pause : Icons.play_arrow;
+      });
     });
   }
 
   void playPause() {
-    if (widget.audioPlayer.playing) {
-      widget.audioPlayer.pause();
-    } else {
+    try {
+      if (widget.audioPlayer.playing) {
+        widget.audioPlayer.pause();
+      } else if (!widget.audioPlayer.playing) {
+        widget.audioPlayer.play();
+      }
+    } catch (e) {
+      print('Error during play/pause: $e');
+    }
+  }
+
+  void playNext() {
+    try {
+      currentIndex = (currentIndex + 1) % widget.playlist.length; // Wrap around
+      widget.audioPlayer.setAsset(widget.playlist[currentIndex].url);
       widget.audioPlayer.play();
+    } catch (e) {
+      print('Error during play next: $e');
     }
   }
 
@@ -113,10 +132,18 @@ class _DetailpageState extends State<Detailpage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.fast_rewind,
-                  color: Colors.red,
-                  size: 42.0,
+                IconButton(
+                  onPressed: () {
+                    // Uncomment the line below to repeat the same song
+                    // widget.audioPlayer.seek(Duration.zero);
+                    // Uncomment the line below to play the next song
+                    playNext();
+                  },
+                  icon: const Icon(
+                    Icons.fast_rewind,
+                    color: Colors.red,
+                    size: 42.0,
+                  ),
                 ),
                 const SizedBox(width: 32.0),
                 Container(
@@ -135,10 +162,15 @@ class _DetailpageState extends State<Detailpage> {
                   ),
                 ),
                 const SizedBox(width: 32.0),
-                const Icon(
-                  Icons.fast_forward,
-                  color: Colors.red,
-                  size: 42.0,
+                IconButton(
+                  onPressed: () {
+                    playNext();
+                  },
+                  icon: const Icon(
+                    Icons.fast_forward,
+                    color: Colors.red,
+                    size: 42.0,
+                  ),
                 ),
               ],
             ),
